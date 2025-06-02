@@ -1,0 +1,972 @@
+-- Roblox FE CyberMenu Script
+-- Use with KRNL, Fluxus, Synapse X, or any compatible executor. For educational purposes only!
+-- Warning: Using injectors may violate Roblox TOS and lead to bans.
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- Utility Functions
+local function gplr(name)
+    local matches = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Name:lower():find(name:lower()) or player.DisplayName:lower():find(name:lower()) then
+            table.insert(matches, player)
+        end
+    end
+    return matches
+end
+
+local function notif(message)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.CoreGui
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 200, 0, 50)
+    Frame.Position = UDim2.new(0.5, -100, 0.1, 0)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    Frame.Parent = ScreenGui
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = Frame
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = message
+    TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    TextLabel.TextSize = 16
+    TextLabel.Font = Enum.Font.Code
+    TextLabel.Parent = Frame
+    wait(3)
+    ScreenGui:Destroy()
+end
+
+-- GUI Library (Cyberpunk style)
+local Library = {}
+function Library:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.Name = "CyberMenuFE By Grok Beta v1.0.4"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 450, 0, 400)
+    Frame.Position = UDim2.new(0.5, -225, 0.5, -200)
+    Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = ScreenGui
+    Frame.BackgroundTransparency = 0.3
+    Frame.Active = true
+    Frame.Draggable = true
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 12)
+    Corner.Parent = Frame
+
+    local NeonBorder = Instance.new("UIStroke")
+    NeonBorder.Color = Color3.fromRGB(0, 255, 255)
+    NeonBorder.Thickness = 2
+    NeonBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    NeonBorder.Parent = Frame
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -60, 0, 40)
+    Title.BackgroundTransparency = 1
+    Title.Text = title
+    Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+    Title.TextSize = 22
+    Title.Font = Enum.Font.Code
+    Title.Parent = Frame
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "Close"
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -35, 0, 5)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 25, 0)
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 20
+    CloseButton.Font = Enum.Font.Code
+    CloseButton.Parent = Frame
+    CloseButton.BorderSizePixel = 0
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 8)
+    CloseCorner.Parent = CloseButton
+
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "Minimize"
+    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeButton.Position = UDim2.new(1, -70, 0, 5)
+    MinimizeButton.BackgroundColor3 = Color3.fromRGB(192, 150, 230)
+    MinimizeButton.Text = "-"
+    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MinimizeButton.TextSize = 20
+    MinimizeButton.Font = Enum.Font.Code
+    MinimizeButton.Parent = Frame
+    MinimizeButton.BorderSizePixel = 0
+    local MinimizeCorner = Instance.new("UICorner")
+    MinimizeCorner.CornerRadius = UDim.new(0, 8)
+    MinimizeCorner.Parent = MinimizeButton
+
+    local PageContainer = Instance.new("Frame")
+    PageContainer.Size = UDim2.new(1, -20, 1, -80)
+    PageContainer.Position = UDim2.new(0, 10, 0, 70)
+    PageContainer.BackgroundTransparency = 1
+    PageContainer.Parent = Frame
+
+    local Page1 = Instance.new("Frame")
+    Page1.Size = UDim2.new(1, 0, 1, 0)
+    Page1.BackgroundTransparency = 1
+    Page1.Parent = PageContainer
+    Page1.Visible = true
+
+    local Page2 = Instance.new("Frame")
+    Page2.Size = UDim2.new(1, 0, 1, 0)
+    Page2.BackgroundTransparency = 1
+    Page2.Parent = PageContainer
+    Page2.Visible = false
+
+    local Page1Layout = Instance.new("UIListLayout")
+    Page1Layout.Padding = UDim.new(0, 10)
+    Page1Layout.Parent = Page1
+
+    local Page2Layout = Instance.new("UIListLayout")
+    Page2Layout.Padding = UDim.new(0, 10)
+    Page2Layout.Parent = Page2
+
+    local PageSwitch = Instance.new("Frame")
+    PageSwitch.Size = UDim2.new(1, 0, 0, 30)
+    PageSwitch.Position = UDim2.new(0, 0, 0, 40)
+    PageSwitch.BackgroundTransparency = 1
+    PageSwitch.Parent = Frame
+
+    local Page1Button = Instance.new("TextButton")
+    Page1Button.Size = UDim2.new(0.5, -5, 0, 30)
+    Page1Button.Position = UDim2.new(0, 0, 0, 0)
+    Page1Button.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    Page1Button.Text = "Page 1"
+    Page1Button.TextColor3 = Color3.fromRGB(0, 255, 255)
+    Page1Button.TextSize = 16
+    Page1Button.Font = Enum.Font.Code
+    Page1Button.Parent = PageSwitch
+    Page1Button.BorderSizePixel = 0
+    local Page1Corner = Instance.new("UICorner")
+    Page1Corner.CornerRadius = UDim.new(0, 8)
+    Page1Corner.Parent = Page1Button
+
+    local Page2Button = Instance.new("TextButton")
+    Page2Button.Size = UDim2.new(0.5, -5, 0, 30)
+    Page2Button.Position = UDim2.new(0.5, 5, 0, 0)
+    Page2Button.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    Page2Button.Text = "Page 2"
+    Page2Button.TextColor3 = Color3.fromRGB(0, 255, 255)
+    Page2Button.TextSize = 16
+    Page2Button.Font = Enum.Font.Code
+    Page2Button.Parent = PageSwitch
+    Page2Button.BorderSizePixel = 0
+    local Page2Corner = Instance.new("UICorner")
+    Page2Corner.CornerRadius = UDim.new(0, 8)
+    Page2Corner.Parent = Page2Button
+
+    local window = { Page1 = Page1, Page2 = Page2, Frame = Frame, Minimized = false }
+
+    function window:AddButton(text, callback, page)
+        local Button = Instance.new("TextButton")
+        Button.Size = UDim2.new(1, 0, 0, 40)
+        Button.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+        Button.Text = text
+        Button.TextColor3 = Color3.fromRGB(0, 255, 255)
+        Button.TextSize = 16
+        Button.Font = Enum.Font.Code
+        Button.Parent = page
+        Button.BorderSizePixel = 0
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 8)
+        Corner.Parent = Button
+
+        local HoverEffect = Instance.new("UIStroke")
+        HoverEffect.Color = Color3.fromRGB(255, 0, 255)
+        HoverEffect.Thickness = 1
+        HoverEffect.Enabled = false
+        HoverEffect.Parent = Button
+
+        Button.MouseEnter:Connect(function()
+            HoverEffect.Enabled = true
+        end)
+        Button.MouseLeave:Connect(function()
+            HoverEffect.Enabled = false
+        end)
+
+        Button.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+    end
+
+    function window:AddSlider(text, min, max, callback)
+        local SliderFrame = Instance.new("Frame")
+        SliderFrame.Size = UDim2.new(1, 0, 0, 60)
+        SliderFrame.BackgroundTransparency = 1
+        SliderFrame.Parent = Page1
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, 0, 0, 20)
+        Label.BackgroundTransparency = 1
+        Label.Text = text
+        Label.TextColor3 = Color3.fromRGB(0, 255, 255)
+        Label.TextSize = 16
+        Label.Font = Enum.Font.Code
+        Label.Parent = SliderFrame
+
+        local Slider = Instance.new("TextButton")
+        Slider.Size = UDim2.new(1, 0, 0, 20)
+        Slider.Position = UDim2.new(0, 0, 0, 30)
+        Slider.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+        Slider.Text = ""
+        Slider.Parent = SliderFrame
+        Slider.BorderSizePixel = 0
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 8)
+        Corner.Parent = Slider
+
+        local Fill = Instance.new("Frame")
+        Fill.Size = UDim2.new(0, 0, 1, 0)
+        Fill.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+        Fill.Parent = Slider
+        Fill.BorderSizePixel = 0
+
+        local FillCorner = Instance.new("UICorner")
+        FillCorner.CornerRadius = UDim.new(0, 8)
+        FillCorner.Parent = Fill
+
+        local dragging = false
+        Slider.MouseButton1Down:Connect(function()
+            dragging = true
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+
+        RunService.RenderStepped:Connect(function()
+            if dragging then
+                local mouseX = UserInputService:GetMouseLocation().X
+                local sliderX = Slider.AbsolutePosition.X
+                local sliderWidth = Slider.AbsoluteSize.X
+                local percent = math.clamp((mouseX - sliderX) / sliderWidth, 0, 1)
+                Fill.Size = UDim2.new(percent, 0, 1, 0)
+                local value = min + (max - min) * percent
+                callback(math.floor(value))
+            end
+        end)
+    end
+
+    function window:AddTextBox(text, callback, page)
+        local TextBoxFrame = Instance.new("Frame")
+        TextBoxFrame.Size = UDim2.new(1, 0, 0, 60)
+        TextBoxFrame.BackgroundTransparency = 1
+        TextBoxFrame.Parent = page
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1, 0, 0, 20)
+        Label.BackgroundTransparency = 1
+        Label.Text = text
+        Label.TextColor3 = Color3.fromRGB(0, 255, 255)
+        Label.TextSize = 16
+        Label.Font = Enum.Font.Code
+        Label.Parent = TextBoxFrame
+
+        local TextBox = Instance.new("TextBox")
+        TextBox.Size = UDim2.new(1, 0, 0, 30)
+        TextBox.Position = UDim2.new(0, 0, 0, 30)
+        TextBox.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+        TextBox.TextColor3 = Color3.fromRGB(0, 255, 255)
+        TextBox.TextSize = 16
+        TextBox.Font = Enum.Font.Code
+        TextBox.Parent = TextBoxFrame
+        TextBox.BorderSizePixel = 0
+        TextBox.Text = ""
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 8)
+        Corner.Parent = TextBox
+
+        TextBox.FocusLost:Connect(function(enter)
+            if enter then
+                callback(TextBox.Text)
+            end
+        end)
+    end
+
+    -- Page switching
+    Page1Button.MouseButton1Click:Connect(function()
+        Page1.Visible = true
+        Page2.Visible = false
+    end)
+
+    Page2Button.MouseButton1Click:Connect(function()
+        Page1.Visible = false
+        Page2.Visible = true
+    end)
+
+    -- Close button
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+        print("Menu closed")
+    end)
+
+    -- Minimize/Maximize
+    MinimizeButton.MouseButton1Click:Connect(function()
+        if not window.Minimized then
+            PageContainer.Visible = false
+            PageSwitch.Visible = false
+            Frame.Size = UDim2.new(0, 450, 0, 40)
+            MinimizeButton.Text = "+"
+            window.Minimized = true
+        else
+            PageContainer.Visible = true
+            PageSwitch.Visible = true
+            Frame.Size = UDim2.new(0, 450, 0, 400)
+            MinimizeButton.Text = "-"
+            window.Minimized = false
+        end
+    end)
+
+    -- Fade-in animation
+    Frame.Position = UDim2.new(0.5, -225, 0.5, -200)
+    Frame.BackgroundTransparency = 1
+    local tween = TweenService:Create(Frame, TweenInfo.new(0.7, Enum.EasingStyle.Sine), { BackgroundTransparency = 0.3 })
+    tween:Play()
+
+    return window
+end
+
+-- Main script
+local Menu = Library:CreateWindow("CyberMenu FE By Grok Beta v1.0.4")
+local flying = false
+local noclip = false
+local infiniteJump = false
+local espEnabled = false
+local ringPartsEnabled = false
+
+-- Page 1: Toggle Fly (FE)
+Menu:AddButton("Toggle Fly (FE)", function()
+    flying = not flying
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        notif("Character not loaded")
+        flying = false
+        return
+    end
+
+    if flying then
+        local chr = LocalPlayer.Character
+        local hum = chr:FindFirstChildOfClass("Humanoid")
+        local isR6 = hum.RigType == Enum.HumanoidRigType.R6
+        local part = isR6 and chr:FindFirstChild("Torso") or chr:FindFirstChild("UpperTorso")
+
+        if not part then
+            notif("Invalid character parts")
+            flying = false
+            return
+        end
+
+        chr.Animate.Disabled = true
+        for _, v in ipairs(hum:GetPlayingAnimationTracks()) do
+            v:AdjustSpeed(0)
+        end
+        hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Flying, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Running, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+        hum:ChangeState(Enum.HumanoidStateType.Swimming)
+
+        local bg = Instance.new("BodyGyro", part)
+        bg.P = 9e4
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.CFrame = part.CFrame
+
+        local bv = Instance.new("BodyVelocity", part)
+        bv.Velocity = Vector3.new(0, 0.1, 0)
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+
+        hum.PlatformStand = true
+
+        local ctrl = {f = 0, b = 0, l = 0, r = 0}
+        local lastctrl = {f = 0, b = 0, l = 0, r = 0}
+        local maxspeed = 50
+        local speed = 0
+
+        spawn(function()
+            while flying and chr and hum and hum.Parent do
+                RunService.RenderStepped:Wait()
+
+                if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
+                    speed = speed + 0.5 + (speed / maxspeed)
+                    if speed > maxspeed then
+                        speed = maxspeed
+                    end
+                elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
+                    speed = speed - 1
+                    if speed < 0 then
+                        speed = 0
+                    end
+                end
+
+                if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
+                    bv.Velocity = ((Workspace.CurrentCamera.CFrame.LookVector * (ctrl.f + ctrl.b)) +
+                        ((Workspace.CurrentCamera.CFrame * CFrame.new(ctrl.l + ctrl.r, (ctrl.f + ctrl.b) * 0.2, 0).Position) -
+                        Workspace.CurrentCamera.CFrame.Position)) * speed
+                    lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
+                elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
+                    bv.Velocity = ((Workspace.CurrentCamera.CFrame.LookVector * (lastctrl.f + lastctrl.b)) +
+                        ((Workspace.CurrentCamera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + lastctrl.b) * 0.2, 0).Position) -
+                        Workspace.CurrentCamera.CFrame.Position)) * speed
+                else
+                    bv.Velocity = Vector3.new(0, 0.1, 0)
+                end
+
+                bg.CFrame = Workspace.CurrentCamera.CFrame * CFrame.Angles(-math.rad((ctrl.f + ctrl.b) * 50 * speed / maxspeed), 0, 0)
+            end
+
+            if bg then bg:Destroy() end
+            if bv then bv:Destroy() end
+            if hum then
+                hum.PlatformStand = false
+                chr.Animate.Disabled = false
+                hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Flying, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+                hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+            end
+        end)
+
+        UserInputService.InputBegan:Connect(function(input)
+            if not flying then return end
+            if input.KeyCode == Enum.KeyCode.W then
+                ctrl.f = 1
+            elseif input.KeyCode == Enum.KeyCode.S then
+                ctrl.b = -1
+            elseif input.KeyCode == Enum.KeyCode.A then
+                ctrl.l = -1
+            elseif input.KeyCode == Enum.KeyCode.D then
+                ctrl.r = 1
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if not flying then return end
+            if input.KeyCode == Enum.KeyCode.W then
+                ctrl.f = 0
+            elseif input.KeyCode == Enum.KeyCode.S then
+                ctrl.b = 0
+            elseif input.KeyCode == Enum.KeyCode.A then
+                ctrl.l = 0
+            elseif input.KeyCode == Enum.KeyCode.D then
+                ctrl.r = 0
+            end
+        end)
+
+        print("Fly enabled")
+    else
+        print("Fly disabled")
+    end
+end, Menu.Page1)
+
+-- Page 1: Toggle Noclip (FE)
+Menu:AddButton("Toggle Noclip (FE)", function()
+    noclip = not noclip
+    if noclip then
+        RunService.Stepped:Connect(function()
+            if not noclip then return end
+            if LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+    print("Noclip " .. (noclip and "enabled" or "disabled"))
+end, Menu.Page1)
+
+-- Page 1: Fling Player (FE)
+Menu:AddTextBox("Fling Player (FE)", function(playerName)
+    if playerName == "" or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        notif("Invalid input or character not loaded")
+        return
+    end
+    local Target = gplr(playerName)
+    if Target[1] then
+        Target = Target[1]
+        if not Target.Character or not Target.Character:FindFirstChild("HumanoidRootPart") then
+            notif("Target player not found")
+            return
+        end
+        local Thrust = Instance.new("BodyThrust", LocalPlayer.Character.HumanoidRootPart)
+        Thrust.Force = Vector3.new(9999, 9999, 9999)
+        Thrust.Name = "YeetForce"
+        spawn(function()
+            repeat
+                LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame
+                Thrust.Location = Target.Character.HumanoidRootPart.Position
+                RunService.Heartbeat:Wait()
+            until not Target.Character or not Target.Character:FindFirstChild("Head")
+            Thrust:Destroy()
+        end)
+        print("Fling executed on " .. Target.Name)
+    else
+        notif("Invalid player")
+    end
+end, Menu.Page1)
+
+-- Page 1: Jerk Off (R15)
+Menu:AddButton("Jerk Off (R15)", function()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        notif("Character not loaded")
+        return
+    end
+    local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if hum.RigType ~= Enum.HumanoidRigType.R15 then
+        notif("R15 only")
+        return
+    end
+    loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    print("Jerk Off executed")
+end, Menu.Page1)
+
+-- Page 1: Teleport Aura (Beta)
+Menu:AddSlider("Teleport Aura (Beta)", 10, 50, function(range)
+    spawn(function()
+        while true do
+            if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local distance = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                    if distance <= range then
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
+                        local bodyVelocity = Instance.new("BodyVelocity")
+                        bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bodyVelocity.Velocity = Vector3.new(math.random(-50, 50), 100, math.random(-50, 50))
+                        bodyVelocity.Parent = player.Character.HumanoidRootPart
+                        wait(0.2)
+                        bodyVelocity:Destroy()
+                    end
+                end
+            end
+            wait(1)
+        end
+    end)
+end)
+
+-- Page 1: Mass Fling (FE)
+Menu:AddButton("Mass Fling (FE)", function()
+    local function SkidFling(TargetPlayer)
+        local Character = LocalPlayer.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+        local RootPart = Humanoid and Humanoid.RootPart
+
+        local TCharacter = TargetPlayer.Character
+        local THumanoid
+        local TRootPart
+        local THead
+        local Accessory
+        local Handle
+
+        if TCharacter:FindFirstChildOfClass("Humanoid") then
+            THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
+        end
+        if THumanoid and THumanoid.RootPart then
+            TRootPart = THumanoid.RootPart
+        end
+        if TCharacter:FindFirstChild("Head") then
+            THead = TCharacter.Head
+        end
+        if TCharacter:FindFirstChildOfClass("Accessory") then
+            Accessory = TCharacter:FindFirstChildOfClass("Accessory")
+        end
+        if Accessory and Accessory:FindFirstChild("Handle") then
+            Handle = Accessory.Handle
+        end
+
+        if Character and Humanoid and RootPart then
+            if RootPart.Velocity.Magnitude < 50 then
+                getgenv().OldPos = RootPart.CFrame
+            end
+            if THumanoid and THumanoid.Sit then
+                notif("Target is sitting")
+                return
+            end
+            if THead then
+                workspace.CurrentCamera.CameraSubject = THead
+            elseif not THead and Handle then
+                workspace.CurrentCamera.CameraSubject = Handle
+            elseif THumanoid and TRootPart then
+                workspace.CurrentCamera.CameraSubject = THumanoid
+            end
+            if not TCharacter:FindFirstChildWhichIsA("BasePart") then
+                return
+            end
+
+            local FPos = function(BasePart, Pos, Ang)
+                RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+                Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+                RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+                RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+            end
+
+            local SFBasePart = function(BasePart)
+                local TimeToWait = 2
+                local Time = tick()
+                local Angle = 0
+
+                repeat
+                    if RootPart and THumanoid then
+                        if BasePart.Velocity.Magnitude < 50 then
+                            Angle = Angle + 100
+
+                            FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                            task.wait()
+                        else
+                            FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(-90), 0, 0))
+                            task.wait()
+
+                            FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                            task.wait()
+                        end
+                    else
+                        break
+                    end
+                until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
+            end
+
+            workspace.FallenPartsDestroyHeight = 0/0
+
+            local BV = Instance.new("BodyVelocity")
+            BV.Name = "EpixVel"
+            BV.Parent = RootPart
+            BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+            BV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+
+            Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+            if TRootPart and THead then
+                if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
+                    SFBasePart(THead)
+                else
+                    SFBasePart(TRootPart)
+                end
+            elseif TRootPart and not THead then
+                SFBasePart(TRootPart)
+            elseif not TRootPart and THead then
+                SFBasePart(THead)
+            elseif not TRootPart and not THead and Accessory and Handle then
+                SFBasePart(Handle)
+            else
+                notif("Target is missing parts")
+                return
+            end
+
+            BV:Destroy()
+            Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+            workspace.CurrentCamera.CameraSubject = Humanoid
+
+            repeat
+                RootPart.CFrame = getgenv().OldPos * CFrame.new(0, 0.5, 0)
+                Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, 0.5, 0))
+                Humanoid:ChangeState("GettingUp")
+                for _, part in ipairs(Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Velocity = Vector3.zero
+                        part.RotVelocity = Vector3.zero
+                    end
+                end
+                task.wait()
+            until (RootPart.Position - getgenv().OldPos.Position).Magnitude < 25
+            workspace.FallenPartsDestroyHeight = getgenv().FPDH or -500
+        else
+            notif("Character not loaded")
+        end
+    end
+
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        notif("Invalid character")
+        return
+    end
+    getgenv().FPDH = workspace.FallenPartsDestroyHeight
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            SkidFling(player)
+        end
+    end
+    print("Mass Fling executed")
+end, Menu.Page1)
+
+-- Page 2: Infinite Jump (FE)
+Menu:AddButton("Toggle Infinite Jump (FE)", function()
+    infiniteJump = not infiniteJump
+    if infiniteJump then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJump and LocalPlayer.Character then
+                LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+    print("Infinite Jump " .. (infiniteJump and "enabled" or "disabled"))
+end, Menu.Page2)
+
+-- Page 2: Toggle ESP (FE)
+Menu:AddButton("Toggle ESP (FE)", function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local highlight = Instance.new("Highlight")
+                highlight.FillColor = Color3.fromRGB(0, 255, 255)
+                highlight.OutlineColor = Color3.fromRGB(255, 50, 255)
+                highlight.Parent = player.Character
+            end
+        end
+        Players.PlayerAdded:Connect(function(player)
+            if espEnabled and player ~= LocalPlayer then
+                player.CharacterAdded:Connect(function(character)
+                    local highlight = Instance.new("Highlight")
+                    highlight.FillColor = Color3.fromRGB(0, 255, 255)
+                    highlight.OutlineColor = Color3.fromRGB(255, 50, 255)
+                    highlight.Parent = character
+                end)
+            end
+        end)
+    else
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, v in pairs(player.Character:GetChildren()) do
+                    if v:IsA("Highlight") then
+                        v:Destroy()
+                    end
+                end
+            end
+        end
+    end
+    print("ESP " .. (espEnabled and "enabled" or "disabled"))
+end, Menu.Page2)
+
+-- Page 2: Fake Lag (Beta)
+Menu:AddButton("Fake Lag (Beta)", function()
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        print("Character not loaded!")
+        return
+    end
+    spawn(function()
+        for i = 1, 5 do
+            LocalPlayer.Character.HumanoidRootPart.Anchored = true
+            wait(0.1)
+            LocalPlayer.Character.HumanoidRootPart.Anchored = false
+            wait(0.1)
+        end
+    end)
+    print("Fake Lag executed")
+end, Menu.Page2)
+
+-- Page 2: Sound Spam (Client)
+Menu:AddButton("Sound Spam (Client)", function()
+    spawn(function()
+        for i = 1, 5 do
+            local sound = Instance.new("Sound")
+            sound.SoundId = "rbxassetid://1839246711"
+            sound.Volume = 10
+            sound.Parent = Workspace
+            sound:Play()
+            wait(2)
+            sound:Destroy()
+        end
+    end)
+    print("Sound Spam executed")
+end, Menu.Page2)
+
+-- Page 2: Gravity Chaos (FE)
+Menu:AddButton("Toggle Gravity Chaos (FE)", function()
+    spawn(function()
+        for i = 1, 5 do
+            Workspace.Gravity = math.random(50, 300)
+            wait(1)
+        end
+        Workspace.Gravity = 196.2
+    end)
+    print("Gravity Chaos executed")
+end, Menu.Page2)
+
+-- Page 2: Mass Random Teleport (Beta)
+Menu:AddButton("Mass Random Teleport (Beta)", function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(math.random(-500, 500), 100, math.random(-500, 500)))
+        end
+    end
+    print("Mass Random Teleport executed")
+end, Menu.Page2)
+
+-- Page 2: Toggle Super Ring (FE)
+Menu:AddButton("Toggle Super Ring (FE)", function()
+    ringPartsEnabled = not ringPartsEnabled
+    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        notif("Character not loaded")
+        ringPartsEnabled = false
+        return
+    end
+
+    if ringPartsEnabled then
+        local config = {
+            radius = 50,
+            height = 100,
+            rotationSpeed = 10,
+            attractionStrength = 1000
+        }
+
+        local function RetainPart(Part)
+            if Part:IsA("BasePart") and not Part.Anchored and Part:IsDescendantOf(Workspace) then
+                if Part.Parent == LocalPlayer.Character or Part:IsDescendantOf(LocalPlayer.Character) then
+                    return false
+                end
+                Part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                Part.CanCollide = false
+                return true
+            end
+            return false
+        end
+
+        local parts = {}
+        local function addPart(part)
+            if RetainPart(part) then
+                if not table.find(parts, part) then
+                    table.insert(parts, part)
+                end
+            end
+        end
+
+        local function removePart(part)
+            local index = table.find(parts, part)
+            if index then
+                table.remove(parts, index)
+            end
+        end
+
+        for _, part in pairs(Workspace:GetDescendants()) do
+            addPart(part)
+        end
+
+        Workspace.DescendantAdded:Connect(addPart)
+        Workspace.DescendantRemoving:Connect(removePart)
+
+        local connection
+        connection = RunService.Heartbeat:Connect(function()
+            if not ringPartsEnabled then
+                connection:Disconnect()
+                return
+            end
+
+            local humanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                local tornadoCenter = humanoidRootPart.Position
+                for _, part in pairs(parts) do
+                    if part.Parent and not part.Anchored then
+                        local pos = part.Position
+                        local distance = (Vector3.new(pos.X, tornadoCenter.Y, pos.Z) - tornadoCenter).Magnitude
+                        local angle = math.atan2(pos.Z - tornadoCenter.Z, pos.X - tornadoCenter.X)
+                        local newAngle = angle + math.rad(config.rotationSpeed)
+                        local targetPos = Vector3.new(
+                            tornadoCenter.X + math.cos(newAngle) * math.min(config.radius, distance),
+                            tornadoCenter.Y + (config.height * (math.abs(math.sin((pos.Y - tornadoCenter.Y) / config.height)))),
+                            tornadoCenter.Z + math.sin(newAngle) * math.min(config.radius, distance)
+                        )
+                        local directionToTarget = (targetPos - part.Position).Unit
+                        part.Velocity = directionToTarget * config.attractionStrength
+                    end
+                end
+            end
+        end)
+
+        print("Super Ring enabled")
+    else
+        print("Super Ring disabled")
+    end
+end, Menu.Page2)
+
+-- Hotkey for menu
+local menuVisible = true
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        game.CoreGui.CyberMenuFE.Enabled = not menuVisible
+        menuVisible = not menuVisible
+    end
+end)
+
+-- Message
+print("CyberMenu FE loaded! Press Right Shift to toggle menu.")
